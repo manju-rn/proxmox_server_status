@@ -1,0 +1,11 @@
+{
+  "domain": "proxmox_server_status",
+  "name": "proxmox_server",
+  "documentation": "https://www.home-assistant.io/integrations/proxmoxve/",
+  "integration_type": "device",
+  "requirements": [],
+  "dependencies": [],
+  "version": "0.1.1",
+  "codeowners": ["@manju-rn"],
+  "iot_class": "local_polling"
+}
