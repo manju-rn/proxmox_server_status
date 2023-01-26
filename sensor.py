@@ -43,6 +43,8 @@ PVE_URL_SUFFIX_VMS = "/qemu"                               # PVE URL append that
 PVE_URL_SUFFIX_LXC = "/lxc"                                # PVE URL append that returns all the LXCs. This gives only the snapshot view not the gory details
 PVE_URL_SUFFIX_DETAIL_INFO = "/status/current"             # PVE URL append that when combined with VMs / LXCs provides the gory details  @TODO Should we fetch only the snapshot view in the initial api calls? The gory details could be seperate on-demand call
 
+""" VM and LXC attribute key collection """
+ATTR_KEYS = ['name', 'status',  'uptime', 'mem', 'maxmem', 'cpu', 'cpus', 'netin', 'netout', 'maxdisk']
 
 
 # SCAN_INTERVAL = timedelta(minutes=480)                     # @TODO: make it configurable?
@@ -125,7 +127,8 @@ class ProxmoxSensors(Entity):
 
                     """ Extract the VMs """
                     for vm in vms:
-                        self._attrs[vm['vmid']] = vm['name'] + ATTR_SEPERATOR + vm['status']
+                        self.add_attributes(vm)
+                        #self._attrs[vm['vmid']] = vm['name'] + ATTR_SEPERATOR + vm['status']
                         _LOGGER.warn("Proxmox extract VM Name %s %s %s %s %s", vm['vmid'] , ATTR_SEPERATOR ,  vm['name'] , ATTR_SEPERATOR , vm['status'])
 
                     response = await self.fire_api_call(PVE_URL_SUFFIX_NODES + node_name + PVE_URL_SUFFIX_LXC)
@@ -135,7 +138,8 @@ class ProxmoxSensors(Entity):
 
                     """ Extract the LXCs """
                     for lxc in lxcs:
-                        self._attrs[lxc['vmid']] = lxc['name'] + ATTR_SEPERATOR + lxc['status']
+                        self.add_attributes(lxc)                        
+                        # self._attrs[lxc['vmid']] = lxc['name'] + ATTR_SEPERATOR + lxc['status']
                         _LOGGER.warn("Proxmox extract LXC Name %s %s %s %s %s", lxc['vmid'] , ATTR_SEPERATOR , lxc['name'] , ATTR_SEPERATOR , lxc['status'])
             else:
                 raise ValueError("Proxmox data received is Null") 
@@ -170,6 +174,13 @@ class ProxmoxSensors(Entity):
 
         _LOGGER.info("Proxmox Server Response  %s", response.status)
         return response
+    
+    def add_attributes(self, device):
+        combined_attr_value = ""
+        for ATTR_KEY in ATTR_KEYS:
+            combined_attr_value = combined_attr_value + str(device[ATTR_KEY]) + ATTR_SEPERATOR
+
+        self._attrs[device['vmid']] = combined_attr_value
 
     def state_update(self, message):
         self._state = message
